@@ -12,7 +12,7 @@
 import numpy as np
 
 
-def nonlin(x, deriv=False):
+def sigmoid(x, deriv=False):
     if deriv:
         # Sigmoid 函数的导数
         return x * (1 - x)
@@ -34,26 +34,21 @@ def train(X, Y):
     # training step
     for j in range(200000):
         l0 = X  # 第一层 (input)
-        l1 = nonlin(np.dot(l0, syn0))  # 第二层
-        l2 = nonlin(np.dot(l1, syn1))  # 第三层 (output 的预测)
-
-        l2_error = Y - l2  # 误差
-
+        l1 = sigmoid(np.dot(l0, syn0))  # 第二层
+        l2 = sigmoid(np.dot(l1, syn1))  # 第三层 (output 的预测)
+        error = (1 / 2) * (Y - l2) * (Y - l2)
         if j % 10000 == 0:
-            print("Error: " + str(np.mean(np.abs(l2_error))))
+            print("Error in %d iteration for training: %s" % (j, str(np.mean(error))))
 
-        # 梯度下降算法，确保每次误差都越来越小
-        l2_delta = l2_error * nonlin(l2, True)
-        # 反向传播，得到第一层的误差，反映第一层对第二层预测误差的贡献
-        l1_error = l2_delta.dot(syn1.T)
-        l1_delta = l1_error * nonlin(l1, True)
+        # 反向传播算法实现梯度下降，参考：https://blog.csdn.net/ft_sunshine/article/details/90221691
+        # 这里 delta 计算本质是链导法则
+        l2_delta = -(Y - l2) * sigmoid(l2, True)
+        l1_delta = l2_delta.dot(syn1.T) * sigmoid(l1, True)
         # update weights，更新突触权重，实现梯度下降
-        syn0 += l0.T.dot(l1_delta)
-        syn1 += l1.T.dot(l2_delta)
+        syn1 -= l1.T.dot(l2_delta)
+        syn0 -= l0.T.dot(l1_delta)
 
     print("Training finish!")
-    print("l2:")
-    print(l2)
     print("syn0:")
     print(syn0)
     print("syn1:")
@@ -63,8 +58,8 @@ def train(X, Y):
 
 def test(X, syn0, syn1):
     l0 = X
-    l1 = nonlin(np.dot(l0, syn0))  # 第二层
-    l2 = nonlin(np.dot(l1, syn1))  # 第三层 (output 的预测)
+    l1 = sigmoid(np.dot(l0, syn0))  # 第二层
+    l2 = sigmoid(np.dot(l1, syn1))  # 第三层 (output 的预测)
     return l2
 
 
@@ -80,8 +75,8 @@ def main():
     # output data
     Y = np.array([[0],
                   [1],
-                  [1],
-                  [0]])
+                  [0],
+                  [1]])
 
     syn0, syn1 = train(X, Y)
     res = test(X, syn0, syn1)
