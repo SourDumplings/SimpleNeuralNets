@@ -11,6 +11,9 @@
 
 import numpy as np
 
+ita = 0.01
+iteration = 2000000
+
 
 def sigmoid(x, deriv=False):
     if deriv:
@@ -32,7 +35,7 @@ def train(X, Y):
     syn1 = 2 * np.random.random((4, 1)) - 1  # 4 * 1 的矩阵
 
     # training step
-    for j in range(200000):
+    for j in range(iteration):
         l0 = X  # 第一层 (input)
         l1 = sigmoid(np.dot(l0, syn0))  # 第二层
         l2 = sigmoid(np.dot(l1, syn1))  # 第三层 (output 的预测)
@@ -45,8 +48,8 @@ def train(X, Y):
         l2_delta = -(Y - l2) * sigmoid(l2, True)
         l1_delta = l2_delta.dot(syn1.T) * sigmoid(l1, True)
         # update weights，更新突触权重，实现梯度下降
-        syn1 -= l1.T.dot(l2_delta)
-        syn0 -= l0.T.dot(l1_delta)
+        syn1 -= ita * l1.T.dot(l2_delta)
+        syn0 -= ita * l0.T.dot(l1_delta)
 
     print("Training finish!")
     print("syn0:")
@@ -75,7 +78,7 @@ def main():
     # output data
     Y = np.array([[0],
                   [1],
-                  [0],
+                  [1],
                   [1]])
 
     syn0, syn1 = train(X, Y)
